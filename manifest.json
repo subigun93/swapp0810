@@ -1,0 +1,20 @@
+{
+  "name": "코드론 리모콘 연습",
+  "short_name": "코드론 연습",
+  "description": "코드론 미니 드론 수업 전, 리모콘 조작법을 미리 연습하는 웹앱",
+  "start_url": "./드론시뮬레이터.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#dfe7ea",
+  "theme_color": "#1c1c1c",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "./assets/drone.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

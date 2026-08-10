@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>코드론 리모콘 연습 - 화면 뼈대</title>
+<style>
+  :root {
+    --yellow: #f5c518;
+    --black: #1c1c1c;
+    --red: #e2231a;
+    --gray-bg: #f2f2f2;
+    --gray-line: #cfcfcf;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Pretendard", "Noto Sans KR", Arial, sans-serif;
+    background: #e9e9e9;
+    padding: 24px 12px 80px;
+  }
+  h1.page-title {
+    text-align: center;
+    font-size: 20px;
+    color: #444;
+    margin: 0 0 24px;
+  }
+  .screen-label {
+    max-width: 420px;
+    margin: 40px auto 8px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #666;
+    padding-left: 4px;
+  }
+  .screen-label.first { margin-top: 0; }
+
+  /* 휴대폰 프레임 느낌 */
+  .phone {
+    max-width: 420px;
+    margin: 0 auto;
+    background: #fff;
+    border: 4px solid #333;
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    min-height: 720px;
+  }
+
+  /* 공통: 상단바 */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    background: var(--black);
+    color: #fff;
+    font-size: 15px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .lang-select {
+    display: flex;
+    gap: 6px;
+  }
+  .lang-btn {
+    background: #333;
+    border: 2px solid var(--yellow);
+    color: var(--yellow);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 14px;
+    font-weight: bold;
+  }
+  .progress-badge, .difficulty-badge, .timer-badge {
+    background: var(--yellow);
+    color: var(--black);
+    font-weight: bold;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 15px;
+  }
+
+  /* 튜토리얼 화면 */
+  .step-title {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--black);
+    padding: 16px 12px 8px;
+  }
+  .sim-area {
+    flex: 1;
+    background: linear-gradient(#dff1ff, #eaf7ea);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+    border-top: 2px dashed var(--gray-line);
+    border-bottom: 2px dashed var(--gray-line);
+    position: relative;
+  }
+  .sim-area img.drone-img {
+    width: 45%;
+    max-width: 160px;
+  }
+  .step-desc {
+    text-align: center;
+    font-size: 18px;
+    line-height: 1.5;
+    color: #222;
+    padding: 14px 20px;
+    min-height: 60px;
+  }
+  .step-desc .check {
+    display: inline-block;
+    margin-left: 8px;
+    color: #2e9e3f;
+    font-weight: bold;
+  }
+
+  .remote-area {
+    background: #ddd;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+  }
+  .remote-area img {
+    width: 90%;
+    max-width: 320px;
+  }
+
+  .btn-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 16px 20px;
+    gap: 12px;
+    background: #f5f5f5;
+  }
+  .btn-row button {
+    flex: 1;
+    padding: 14px 0;
+    font-size: 17px;
+    font-weight: bold;
+    border-radius: 12px;
+    border: none;
+  }
+  .btn-prev {
+    background: #e0e0e0;
+    color: #333;
+  }
+  .btn-next {
+    background: var(--yellow);
+    color: var(--black);
+  }
+
+  /* 난이도 선택 화면 */
+  .center-guide {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 20px;
+  }
+  .center-guide p {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+    margin: 0;
+  }
+  .diff-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+    max-width: 260px;
+  }
+  .diff-buttons button {
+    padding: 18px 0;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 14px;
+    border: 3px solid var(--black);
+    background: #fff;
+    color: var(--black);
+  }
+  .diff-buttons button.easy { border-color: #2e9e3f; color: #2e9e3f; }
+  .diff-buttons button.normal { border-color: #e2a300; color: #b98600; }
+  .diff-buttons button.hard { border-color: var(--red); color: var(--red); }
+
+  .back-link-row {
+    padding: 14px 16px 20px;
+    text-align: center;
+    background: #f5f5f5;
+  }
+  .back-link-row button {
+    padding: 12px 24px;
+    font-size: 15px;
+    border-radius: 10px;
+    border: 2px solid #999;
+    background: #fff;
+    color: #555;
+  }
+
+  /* 게임 플레이 화면 */
+  .course-area {
+    flex: 1;
+    background: repeating-linear-gradient(135deg, #dff1ff, #dff1ff 20px, #d3ecff 20px, #d3ecff 40px);
+    position: relative;
+    min-height: 260px;
+    border-top: 2px dashed var(--gray-line);
+    border-bottom: 2px dashed var(--gray-line);
+  }
+  .course-area .marker {
+    position: absolute;
+    font-size: 12px;
+    font-weight: bold;
+    background: #fff;
+    border-radius: 8px;
+    padding: 4px 8px;
+    border: 2px solid #333;
+  }
+  .marker.start { top: 12%; left: 8%; }
+  .marker.h-pad { bottom: 10%; right: 8%; background: var(--yellow); }
+  .obstacle {
+    position: absolute;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 4px solid var(--red);
+    background: rgba(226,35,26,0.12);
+  }
+  .obstacle.o1 { top: 30%; left: 30%; }
+  .obstacle.o2 { top: 45%; left: 55%; }
+  .obstacle.o3 { top: 60%; left: 35%; }
+  .obstacle.o4 { top: 25%; left: 68%; }
+  .course-area img.drone-img {
+    position: absolute;
+    top: 14%;
+    left: 12%;
+    width: 60px;
+  }
+
+  .result-popup-demo {
+    max-width: 420px;
+    margin: 16px auto 0;
+    background: #fff;
+    border: 3px solid var(--black);
+    border-radius: 16px;
+    padding: 18px;
+    text-align: center;
+  }
+  .result-popup-demo h3 { margin: 0 0 8px; font-size: 18px; }
+  .result-popup-demo p { margin: 4px 0; font-size: 15px; color: #444; }
+  .result-popup-demo .popup-btns {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .result-popup-demo .popup-btns button {
+    flex: 1;
+    padding: 10px 0;
+    border-radius: 10px;
+    border: none;
+    font-weight: bold;
+    font-size: 14px;
+  }
+  .result-popup-demo .popup-btns .retry { background: var(--yellow); }
+  .result-popup-demo .popup-btns .change { background: #e0e0e0; }
+</style>
+</head>
+<body>
+
+<h1 class="page-title">화면 뼈대 미리보기 (기능 없음 · 배치 확인용)</h1>
+
+<!-- ============ 화면 A: 튜토리얼 ============ -->
+<div class="screen-label first">화면 A. 튜토리얼 (1~7단계)</div>
+<div class="phone">
+  <div class="topbar">
+    <div class="lang-select">
+      <span class="lang-btn">한국어</span>
+      <span class="lang-btn">русский</span>
+    </div>
+    <div class="progress-badge">3 / 7단계</div>
+  </div>
+
+  <div class="step-title">이륙하기</div>
+
+  <div class="sim-area">
+    <img class="drone-img" src="assets/drone.svg" alt="드론">
+  </div>
+
+  <div class="step-desc">
+    왼쪽 스틱을 살짝 위로 밀어보세요.
+    <span class="check">✔ 잘했어요!</span>
+  </div>
+
+  <div class="remote-area">
+    <img src="assets/remote.svg" alt="리모콘">
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-prev">◀ 이전 단계</button>
+    <button class="btn-next">다음 단계 ▶</button>
+  </div>
+</div>
+
+<!-- ============ 화면 B: 난이도 선택 ============ -->
+<div class="screen-label">화면 B. 미니 게임 - 난이도 선택</div>
+<div class="phone">
+  <div class="topbar">
+    <div class="lang-select">
+      <span class="lang-btn">한국어</span>
+      <span class="lang-btn">русский</span>
+    </div>
+  </div>
+
+  <div class="center-guide">
+    <p>난이도를 선택하세요</p>
+    <div class="diff-buttons">
+      <button class="easy">초급</button>
+      <button class="normal">중급</button>
+      <button class="hard">고급</button>
+    </div>
+  </div>
+
+  <div class="back-link-row">
+    <button>튜토리얼 다시 하기</button>
+  </div>
+</div>
+
+<!-- ============ 화면 C: 게임 플레이 ============ -->
+<div class="screen-label">화면 C. 미니 게임 - 플레이</div>
+<div class="phone">
+  <div class="topbar">
+    <div class="lang-select">
+      <span class="lang-btn">한국어</span>
+    </div>
+    <div class="difficulty-badge">중급</div>
+    <div class="timer-badge">00:07</div>
+  </div>
+
+  <div class="course-area">
+    <div class="marker start">출발</div>
+    <div class="obstacle o1"></div>
+    <div class="obstacle o2"></div>
+    <div class="obstacle o3"></div>
+    <div class="obstacle o4"></div>
+    <div class="marker h-pad">H 착륙장</div>
+    <img class="drone-img" src="assets/drone.svg" alt="드론">
+  </div>
+
+  <div class="remote-area">
+    <img src="assets/remote.svg" alt="리모콘">
+  </div>
+</div>
+
+<!-- 결과 팝업 예시 (게임 완료 시 course-area 위에 표시될 팝업의 배치 참고용) -->
+<div class="screen-label">화면 C-1. 게임 완료 결과 팝업 (예시)</div>
+<div class="result-popup-demo">
+  <h3>착륙 성공!</h3>
+  <p>걸린 시간: 12.4초</p>
+  <div class="popup-btns">
+    <button class="retry">다시 하기</button>
+    <button class="change">난이도 다시 선택</button>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/드론시뮬레이터.html" }
+  ]
+}

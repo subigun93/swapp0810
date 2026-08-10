@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>코드론 리모콘 연습</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1c1c1c">
+<link rel="icon" href="assets/drone.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/drone.svg">
+<style>
+  :root {
+    --yellow: #f5c518;
+    --black: #1c1c1c;
+    --red: #e2231a;
+    --green: #2e9e3f;
+    --blue: #2e78c9;
+    --orange: #e2a300;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body {
+    height: 100%;
+    margin: 0;
+    font-family: "Pretendard", "Malgun Gothic", "Noto Sans KR", Arial, sans-serif;
+    background: #dfe7ea;
+    touch-action: none;
+  }
+  #app {
+    max-width: 460px;
+    margin: 0 auto;
+    height: 100dvh;
+    height: 100vh;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 24px rgba(0,0,0,0.15);
+    overflow: hidden;
+  }
+
+  /* ===== 헤더 (전 화면 공통) ===== */
+  .app-header {
+    flex: 0 0 auto;
+    background: var(--black);
+    color: #fff;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .app-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--yellow);
+    white-space: nowrap;
+  }
+  .header-right { display: flex; align-items: center; gap: 6px; }
+  .lang-btn {
+    background: #333;
+    border: 2px solid var(--yellow);
+    color: var(--yellow);
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  .lang-btn.active { background: var(--yellow); color: var(--black); }
+  .restart-btn {
+    background: #444;
+    border: none;
+    color: #fff;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  /* ===== 화면 컨테이너 ===== */
+  .screen {
+    display: none;
+    flex: 1 1 auto;
+    min-height: 0;
+    flex-direction: column;
+  }
+  .screen.active { display: flex; }
+
+  /* ===== 튜토리얼/게임 상단 정보줄 ===== */
+  .info-bar {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #2a2a2a;
+    color: #fff;
+    gap: 8px;
+  }
+  .badge {
+    background: var(--yellow);
+    color: var(--black);
+    font-weight: 800;
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  .badge.timer { background: #fff; }
+  .badge.diff { background: #7ad1ff; }
+
+  .step-title {
+    flex: 0 0 auto;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--black);
+    padding: 10px 12px 4px;
+  }
+
+  /* ===== 튜토리얼 시뮬 영역 ===== */
+  .sim-area {
+    flex: 1 1 auto;
+    min-height: 0;
+    position: relative;
+    background: linear-gradient(#dff1ff 0%, #eaf7ea 100%);
+    overflow: hidden;
+  }
+  .drone-wrapper {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 150px;
+    height: 150px;
+    margin-left: -75px;
+    margin-top: -75px;
+  }
+  .drone-svg { width: 100%; height: 100%; overflow: visible; }
+
+  .altitude-gauge {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    bottom: 10px;
+    width: 26px;
+    background: rgba(255,255,255,0.7);
+    border: 2px solid #333;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column-reverse;
+    overflow: hidden;
+  }
+  .altitude-fill {
+    background: linear-gradient(var(--yellow), var(--red));
+    width: 100%;
+    height: 0%;
+    transition: height 0.08s linear;
+  }
+  .altitude-label {
+    position: absolute;
+    right: 40px;
+    top: 10px;
+    font-size: 11px;
+    background: #fff;
+    border: 1px solid #999;
+    border-radius: 8px;
+    padding: 2px 6px;
+    color: #333;
+  }
+
+  .step-desc {
+    flex: 0 0 auto;
+    text-align: center;
+    font-size: 17px;
+    line-height: 1.5;
+    color: #222;
+    padding: 10px 18px;
+    min-height: 30px;
+  }
+  .step-desc .check {
+    display: inline-block;
+    margin-left: 6px;
+    color: var(--green);
+    font-weight: 800;
+  }
+
+  /* ===== 이전/다음 버튼줄 ===== */
+  .nav-row {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 14px;
+    gap: 10px;
+    background: #f5f5f5;
+  }
+  .nav-row button {
+    flex: 1;
+    padding: 12px 0;
+    font-size: 16px;
+    font-weight: 800;
+    border-radius: 12px;
+    border: none;
+  }
+  .btn-prev { background: #e0e0e0; color: #333; }
+  .btn-prev:disabled { opacity: 0.4; }
+  .btn-next { background: var(--yellow); color: var(--black); }
+
+  /* ===== 난이도 선택 화면 ===== */
+  .center-guide {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px;
+    text-align: center;
+  }
+  .center-guide p { font-size: 18px; font-weight: 800; color: #333; margin: 0; }
+  .center-guide .sub { font-size: 14px; font-weight: 500; color: #666; }
+  .diff-buttons { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 260px; }
+  .diff-buttons button {
+    padding: 16px 0; font-size: 18px; font-weight: 800;
+    border-radius: 14px; border: 3px solid var(--black); background: #fff; color: var(--black);
+  }
+  .diff-buttons button.easy { border-color: var(--green); color: var(--green); }
+  .diff-buttons button.normal { border-color: var(--orange); color: var(--orange); }
+  .diff-buttons button.hard { border-color: var(--red); color: var(--red); }
+  .back-link-row { flex: 0 0 auto; padding: 10px 16px 16px; text-align: center; background: #f5f5f5; }
+  .back-link-row button {
+    padding: 10px 22px; font-size: 14px; border-radius: 10px; border: 2px solid #999; background: #fff; color: #555;
+  }
+
+  /* ===== 게임 화면 ===== */
+  .legend-row {
+    flex: 0 0 auto;
+    font-size: 12px;
+    text-align: center;
+    padding: 6px 10px;
+    background: #fff8e1;
+    color: #444;
+  }
+  .course-area {
+    flex: 1 1 auto;
+    min-height: 0;
+    position: relative;
+    background: repeating-linear-gradient(135deg, #dff1ff, #dff1ff 20px, #d3ecff 20px, #d3ecff 40px);
+    overflow: hidden;
+  }
+  .marker {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    font-size: 11px;
+    font-weight: 800;
+    background: #fff;
+    border-radius: 8px;
+    padding: 3px 7px;
+    border: 2px solid #333;
+    white-space: nowrap;
+  }
+  .marker.h-pad { background: var(--yellow); }
+  .obstacle {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 900;
+    color: #fff;
+  }
+  .obstacle.high { background: rgba(46,120,201,0.35); border: 4px solid var(--blue); color: var(--blue); }
+  .obstacle.low { background: rgba(226,163,0,0.35); border: 4px solid var(--orange); color: var(--orange); }
+
+  .game-drone-wrapper {
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    margin-left: -35px;
+    margin-top: -35px;
+  }
+
+  /* ===== 결과 팝업 ===== */
+  .popup-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .popup-overlay.show { display: flex; }
+  .popup-box {
+    background: #fff;
+    border-radius: 18px;
+    padding: 22px 20px;
+    text-align: center;
+    width: 100%;
+    max-width: 300px;
+  }
+  .popup-box h3 { margin: 0 0 10px; font-size: 20px; }
+  .popup-box p { margin: 4px 0; font-size: 16px; color: #444; }
+  .popup-btns { display: flex; gap: 10px; margin-top: 16px; }
+  .popup-btns button {
+    flex: 1; padding: 12px 0; border-radius: 10px; border: none; font-weight: 800; font-size: 14px;
+  }
+  .popup-btns .retry { background: var(--yellow); }
+  .popup-btns .change { background: #e0e0e0; }
+
+  /* ===== 리모콘 (전 화면 하단 고정) ===== */
+  .remote-panel {
+    flex: 0 0 auto;
+    background: #111;
+    padding: 10px 14px 14px;
+    display: none;
+  }
+  .remote-panel.show { display: block; }
+  .remote-top-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 4px 6px;
+  }
+  .remote-switch { width: 30px; height: 14px; border-radius: 7px; background: #333; border: 2px solid var(--yellow); }
+  #switch-left {
+    --hold-progress: 0%;
+    width: 46px; height: 22px; border-radius: 11px;
+    padding: 4px;
+    background: linear-gradient(to right, #7ee787 var(--hold-progress), #333 var(--hold-progress));
+    cursor: pointer;
+    touch-action: none;
+    transition: background 0.05s linear;
+  }
+  #switch-left.holding { border-color: #7ee787; }
+  .remote-logo { color: var(--yellow); font-weight: 900; font-size: 13px; letter-spacing: 1px; }
+  .remote-sticks {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .stick-zone {
+    width: 96px; height: 96px;
+    position: relative;
+    touch-action: none;
+  }
+  .stick-base {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background: #000;
+    border: 3px solid var(--yellow);
+  }
+  .stick-knob {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 46px; height: 46px;
+    margin-left: -23px; margin-top: -23px;
+    border-radius: 50%;
+    background: #2b2b2b;
+    border: 4px solid var(--yellow);
+    transition: transform 0.18s ease;
+  }
+  .stick-knob::after {
+    content: "";
+    position: absolute; left: 50%; top: 50%;
+    width: 12px; height: 12px; margin-left: -6px; margin-top: -6px;
+    border-radius: 50%; background: var(--yellow);
+  }
+  .power-btn {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--red);
+    border: 3px solid #900;
+    position: relative;
+  }
+  .power-btn .led {
+    position: absolute;
+    left: 50%; top: -10px; margin-left: -5px;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #555;
+  }
+  .power-btn.on .led { background: #4dff4d; box-shadow: 0 0 6px #4dff4d; }
+  .remote-legend {
+    text-align: center; color: #aaa; font-size: 11px; margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===== 헤더 ===== -->
+  <div class="app-header">
+    <div class="app-title" data-i18n="appTitle">코드론 리모콘 연습</div>
+    <div class="header-right">
+      <button class="lang-btn" id="lang-ko" onclick="setLang('ko')">한국어</button>
+      <button class="lang-btn" id="lang-ru" onclick="setLang('ru')">русский</button>
+      <button class="restart-btn" onclick="fullRestart()" data-i18n="restart">처음부터</button>
+    </div>
+  </div>
+
+  <!-- ===== 화면 A: 튜토리얼 ===== -->
+  <div class="screen active" id="screen-tutorial">
+    <div class="info-bar">
+      <span></span>
+      <span class="badge" id="progress-badge">1 / 7단계</span>
+    </div>
+    <div class="step-title" id="step-title">전원 켜기</div>
+    <div class="sim-area">
+      <div class="altitude-label"><span data-i18n="altitude">고도</span> <span id="alt-text-t">0</span>%</div>
+      <div class="altitude-gauge"><div class="altitude-fill" id="alt-fill-t"></div></div>
+      <div class="drone-wrapper" id="t-wrapper"></div>
+    </div>
+    <div class="step-desc" id="step-desc">가운데 빨간 버튼을 눌러 리모콘 전원을 켜보세요.<span class="check" id="step-check" style="display:none;">✔ 성공!</span></div>
+    <div class="nav-row">
+      <button class="btn-prev" id="btn-prev" onclick="prevStep()" data-i18n="prev">◀ 이전</button>
+      <button class="btn-next" id="btn-next" onclick="nextStep()" data-i18n="next">다음 ▶</button>
+    </div>
+  </div>
+
+  <!-- ===== 화면 B: 난이도 선택 ===== -->
+  <div class="screen" id="screen-diff">
+    <div class="center-guide">
+      <p data-i18n="diffPrompt">미니 게임 난이도를 선택하세요</p>
+      <p class="sub" id="diff-hint">출발지에서 이륙해서 장애물을 피해 H 착륙장에 착륙하세요!</p>
+      <div class="diff-buttons">
+        <button class="easy" onclick="startGame('easy')" data-i18n="diffEasy">초급</button>
+        <button class="normal" onclick="startGame('normal')" data-i18n="diffNormal">중급</button>
+        <button class="hard" onclick="startGame('hard')" data-i18n="diffHard">고급</button>
+      </div>
+    </div>
+    <div class="back-link-row">
+      <button onclick="goToTutorial(true)" data-i18n="backToTutorial">튜토리얼 다시 하기</button>
+    </div>
+  </div>
+
+  <!-- ===== 화면 C: 게임 플레이 ===== -->
+  <div class="screen" id="screen-game">
+    <div class="info-bar">
+      <span class="badge diff" id="diff-badge">초급</span>
+      <span class="badge timer" id="timer-badge">00.0s</span>
+    </div>
+    <div class="legend-row" id="legend-row">▲ 파란 원: 높게 날아서 피하기 · ▼ 주황 원: 낮게 날아서 피하기</div>
+    <div class="course-area" id="course-area">
+      <div class="altitude-label"><span data-i18n="altitude">고도</span> <span id="alt-text-g">0</span>%</div>
+      <div class="altitude-gauge"><div class="altitude-fill" id="alt-fill-g"></div></div>
+      <div class="marker" id="marker-start">출발</div>
+      <div class="marker h-pad" id="marker-pad">H 착륙장</div>
+      <div class="game-drone-wrapper" id="g-wrapper"></div>
+
+      <div class="popup-overlay" id="popup-overlay">
+        <div class="popup-box">
+          <h3 id="popup-title">착륙 성공!</h3>
+          <p id="popup-time">걸린 시간: 12.4초</p>
+          <div class="popup-btns">
+            <button class="retry" onclick="retryGame()" data-i18n="retry">다시 하기</button>
+            <button class="change" onclick="goToDiff()" data-i18n="changeDiff">난이도 다시 선택</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 리모콘 (공통, 하단 고정) ===== -->
+  <div class="remote-panel show" id="remote-panel">
+    <div class="remote-top-row">
+      <div class="remote-switch" id="switch-left"></div>
+      <div class="remote-logo">ROBOLINK</div>
+      <div class="remote-switch"></div>
+    </div>
+    <div class="remote-sticks">
+      <div class="stick-zone" id="zone-left">
+        <div class="stick-base"></div>
+        <div class="stick-knob" id="knob-left"></div>
+      </div>
+      <button class="power-btn" id="power-btn" disabled><span class="led"></span></button>
+      <div class="stick-zone" id="zone-right">
+        <div class="stick-base"></div>
+        <div class="stick-knob" id="knob-right"></div>
+      </div>
+    </div>
+    <div class="remote-legend" id="remote-legend">왼쪽 스틱: 고도·회전 | 오른쪽 스틱: 이동</div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   0. 다국어 텍스트
+============================================================ */
+const I18N = {
+  ko: {
+    appTitle: "코드론 리모콘 연습",
+    restart: "처음부터",
+    prev: "◀ 이전", next: "다음 ▶",
+    progress: n => `${n} / 7단계`,
+    stepTitles: ["시동 걸기","이륙하기","호버링(제자리 비행)","앞으로·뒤로 가기","좌우로 이동하기","방향 정렬하기(회전)","착륙하기"],
+    stepDescs: [
+      "왼쪽 상단 스위치를 2초간 꾹 누르거나, 양쪽 스틱을 동시에 아래 바깥쪽 대각선(ㅅ자 모양)으로 밀어보세요. 시동이 걸려요.",
+      "왼쪽 스틱을 위로 살짝 밀어보세요. 드론이 떠올라요.",
+      "양쪽 스틱을 가운데에 가만히 두세요. 드론이 공중에 멈춰요.",
+      "오른쪽 스틱을 위로 밀면 앞으로, 아래로 밀면 뒤로 가요. 둘 다 해보세요.",
+      "오른쪽 스틱을 왼쪽, 오른쪽으로 밀어보세요. 드론이 옆으로 움직여요.",
+      "왼쪽 스틱을 좌우로 밀어보세요. 드론이 제자리에서 돌아요.",
+      "왼쪽 스틱을 천천히 아래로 내리세요. 드론이 사뿐히 착륙해요."
+    ],
+    success: "✔ 성공!",
+    diffPrompt: "미니 게임 난이도를 선택하세요",
+    diffHint: "출발지에서 이륙해서 장애물을 피해 H 착륙장에 착륙하세요!",
+    diffEasy: "초급", diffNormal: "중급", diffHard: "고급",
+    backToTutorial: "튜토리얼 다시 하기",
+    legend: "▲ 파란 원: 높게 날아서 피하기 · ▼ 주황 원: 낮게 날아서 피하기",
+    start: "출발", pad: "H 착륙장",
+    landedTitle: "착륙 성공!",
+    crashTitle: "장애물에 부딪혔어요!",
+    timeLabel: t => `걸린 시간: ${t}초`,
+    tryAgainMsg: "다시 도전해보세요!",
+    retry: "다시 하기",
+    changeDiff: "난이도 다시 선택",
+    remoteLegend: "왼쪽 스틱: 고도·회전 | 오른쪽 스틱: 이동",
+    altitude: "고도"
+  },
+  ru: {
+    appTitle: "Тренажёр пульта Codrone",
+    restart: "Сначала",
+    prev: "◀ Назад", next: "Далее ▶",
+    progress: n => `Шаг ${n} из 7`,
+    stepTitles: ["Завести дрон","Взлёт","Зависание в воздухе","Вперёд и назад","Влево и вправо","Поворот дрона","Посадка"],
+    stepDescs: [
+      "Держи левый верхний переключатель 2 секунды, или одновременно толкни оба стика по диагонали вниз-наружу (форма ⋀). Дрон заведётся.",
+      "Слегка подними левый стик вверх — дрон взлетит.",
+      "Держи оба стика по центру — дрон замрёт в воздухе.",
+      "Правый стик вверх — вперёд, вниз — назад. Попробуй оба варианта.",
+      "Двигай правый стик влево и вправо — дрон полетит в сторону.",
+      "Двигай левый стик влево-вправо — дрон повернётся на месте.",
+      "Медленно опусти левый стик вниз — дрон мягко приземлится."
+    ],
+    success: "✔ Успех!",
+    diffPrompt: "Выбери уровень сложности мини-игры",
+    diffHint: "Взлети со старта, облети препятствия и приземлись на площадку H!",
+    diffEasy: "Лёгкий", diffNormal: "Средний", diffHard: "Сложный",
+    backToTutorial: "Повторить обучение",
+    legend: "▲ Синий круг: лети выше · ▼ Оранжевый круг: лети ниже",
+    start: "Старт", pad: "Площадка H",
+    landedTitle: "Посадка успешна!",
+    crashTitle: "Ты столкнулся с препятствием!",
+    timeLabel: t => `Время: ${t} сек`,
+    tryAgainMsg: "Попробуй ещё раз!",
+    retry: "Заново",
+    changeDiff: "Выбрать уровень",
+    remoteLegend: "Левый стик: высота/поворот | Правый: движение",
+    altitude: "Высота"
+  }
+};
+let lang = 'ko';
+function t(key) { return I18N[lang][key]; }
+
+/* ============================================================
+   1. 상태
+============================================================ */
+let screenName = 'tutorial'; // tutorial | diff | game
+let currentStep = 1;
+const stepAchieved = [false,false,false,false,false,false,false]; // index 0~6 = step1~7
+
+const tutorial = { powerOn:false, altitude:0, yaw:0, posX:0, posY:0, everAirborne:false };
+let hoverTimer = 0;
+const step4 = { forward:false, backward:false };
+const step5 = { left:false, right:false };
+
+const sticks = { left:{x:0,y:0}, right:{x:0,y:0} };
+
+/* 시동 걸기 제스처: 왼쪽 스틱 225도(아래-왼쪽), 오른쪽 스틱 135도(아래-오른쪽)로 동시에 밀기 (ㅅ자 모양) */
+const ARM_TARGET_LEFT = { x:-0.7071, y:0.7071 };
+const ARM_TARGET_RIGHT = { x:0.7071, y:0.7071 };
+const ARM_TOLERANCE = 0.35;
+const ARM_HOLD_TIME = 0.25;
+let armGestureTimer = 0;
+let armGestureReady = true;
+
+/* 시동 걸기(2): 왼쪽 상단 스위치 2초 꾹 누르기 */
+const SWITCH_HOLD_TIME = 2000; // ms
+let switchHoldStart = null;
+let switchTriggered = false;
+
+const DIFF_SETTINGS = {
+  easy:   { highSafe:55, lowSafe:45, label:'diffEasy' },
+  normal: { highSafe:60, lowSafe:40, label:'diffNormal' },
+  hard:   { highSafe:68, lowSafe:32, label:'diffHard' }
+};
+const DIFF_LAYOUTS = {
+  easy:   [ {x:25,y:72,r:34,type:'high'}, {x:45,y:56,r:34,type:'low'}, {x:62,y:40,r:34,type:'high'}, {x:78,y:24,r:34,type:'low'} ],
+  normal: [ {x:20,y:76,r:30,type:'high'}, {x:32,y:64,r:30,type:'low'}, {x:44,y:55,r:30,type:'high'}, {x:56,y:45,r:30,type:'low'}, {x:68,y:35,r:30,type:'high'}, {x:80,y:22,r:30,type:'low'} ],
+  hard:   [ {x:18,y:80,r:26,type:'high'}, {x:27,y:69,r:26,type:'low'}, {x:36,y:60,r:26,type:'high'}, {x:46,y:52,r:26,type:'low'}, {x:56,y:44,r:26,type:'high'}, {x:66,y:35,r:26,type:'low'}, {x:75,y:26,r:26,type:'high'}, {x:84,y:16,r:26,type:'low'} ]
+};
+const startPos = { x:10, y:88 };
+const padPos = { x:90, y:10 };
+
+const game = {
+  difficulty: 'easy', settings: DIFF_SETTINGS.easy, obstacles: [],
+  x: startPos.x, y: startPos.y, altitude:0, yaw:0,
+  started:false, startTime:0, elapsed:0,
+  status:'idle' // idle | playing | success | fail
+};
+const DRONE_R_PCT = 4;
+
+/* ============================================================
+   2. 드론 SVG 생성
+============================================================ */
+const PROP_POS = [
+  { cx:-105, cy:-105, color:'#f4f4f4' },
+  { cx: 105, cy:-105, color:'#f4f4f4' },
+  { cx:-105, cy: 105, color:'#f5c518' },
+  { cx: 105, cy: 105, color:'#f5c518' }
+];
+function droneSVG(prefix) {
+  const propsHTML = PROP_POS.map((p,i) => `
+      <circle id="${prefix}-blur-${i}" cx="${p.cx}" cy="${p.cy}" r="58" fill="#dddddd" opacity="0"/>
+      <g id="${prefix}-prop-${i}" transform="translate(${p.cx},${p.cy})">
+        <ellipse rx="52" ry="9" fill="${p.color}" stroke="#1a1a1a" stroke-width="3" transform="rotate(20)"/>
+        <ellipse rx="52" ry="9" fill="${p.color}" stroke="#1a1a1a" stroke-width="3" transform="rotate(110)"/>
+        <circle r="9" fill="#1a1a1a"/>
+      </g>`).join('');
+  return `
+  <svg viewBox="0 0 400 400" class="drone-svg" id="${prefix}-svg">
+    <ellipse id="${prefix}-shadow" cx="200" cy="300" rx="60" ry="14" fill="#000" opacity="0.22"/>
+    <g id="${prefix}-body-group">
+      <g stroke="#2b2b2b" stroke-width="26" stroke-linecap="round">
+        <line x1="0" y1="0" x2="-105" y2="-105"/>
+        <line x1="0" y1="0" x2="105" y2="-105"/>
+        <line x1="0" y1="0" x2="-105" y2="105"/>
+        <line x1="0" y1="0" x2="105" y2="105"/>
+      </g>
+      <g fill="none" stroke="#111111" stroke-width="12">
+        <circle cx="-105" cy="-105" r="66"/>
+        <circle cx="105" cy="-105" r="66"/>
+        <circle cx="-105" cy="105" r="66"/>
+        <circle cx="105" cy="105" r="66"/>
+      </g>
+      ${propsHTML}
+      <g>
+        <ellipse cx="0" cy="0" rx="72" ry="46" fill="#1c1c1c"/>
+        <path d="M 0 -32 L 0 100" stroke="#e2231a" stroke-width="8" stroke-linecap="round"/>
+        <circle cx="0" cy="0" r="10" fill="#3a3a3a"/>
+      </g>
+    </g>
+  </svg>`;
+}
+document.getElementById('t-wrapper').innerHTML = droneSVG('t');
+document.getElementById('g-wrapper').innerHTML = droneSVG('g');
+
+/* 프로펠러 회전(실제 모터처럼 서서히 가속/감속) */
+const PROP_MAX_SPEED = 1400; // deg/s
+const propSpin = { t: { angle:0, speed:0 }, g: { angle:0, speed:0 } };
+function updatePropSpin(prefix, powered, dt) {
+  const st = propSpin[prefix];
+  const target = powered ? PROP_MAX_SPEED : 0;
+  st.speed += (target - st.speed) * Math.min(1, dt*4);
+  st.angle = (st.angle + st.speed*dt) % 360;
+  const blurOpacity = Math.min(0.5, Math.abs(st.speed)/PROP_MAX_SPEED*0.5);
+  PROP_POS.forEach((p,i) => {
+    document.getElementById(`${prefix}-prop-${i}`).setAttribute('transform', `translate(${p.cx},${p.cy}) rotate(${st.angle})`);
+    document.getElementById(`${prefix}-blur-${i}`).setAttribute('opacity', blurOpacity);
+  });
+}
+
+function renderDroneVisual(prefix, state) {
+  const bodyGroup = document.getElementById(`${prefix}-body-group`);
+  const shadow = document.getElementById(`${prefix}-shadow`);
+  const lift = state.altitude * 0.9;
+  bodyGroup.setAttribute('transform', `translate(200,${200 - lift}) rotate(${state.yaw})`);
+  const shrink = 1 - (state.altitude/100)*0.55;
+  shadow.setAttribute('rx', 60*shrink);
+  shadow.setAttribute('ry', 14*shrink);
+  shadow.setAttribute('opacity', 0.22*(1-(state.altitude/100)*0.7));
+}
+
+/* ============================================================
+   3. 리모콘 스틱 (포인터 이벤트)
+============================================================ */
+function setupStick(zoneId, knobId, stickKey) {
+  const zone = document.getElementById(zoneId);
+  const knob = document.getElementById(knobId);
+  const RADIUS = 25;
+  let dragging = false;
+
+  function update(clientX, clientY) {
+    const rect = zone.getBoundingClientRect();
+    const cx = rect.left + rect.width/2;
+    const cy = rect.top + rect.height/2;
+    let dx = clientX - cx, dy = clientY - cy;
+    const dist = Math.hypot(dx,dy);
+    if (dist > RADIUS) { dx = dx/dist*RADIUS; dy = dy/dist*RADIUS; }
+    knob.style.transform = `translate(${dx}px, ${dy}px)`;
+    sticks[stickKey].x = dx / RADIUS;
+    sticks[stickKey].y = dy / RADIUS;
+  }
+  function reset() {
+    knob.style.transition = 'transform 0.18s ease';
+    knob.style.transform = 'translate(0px,0px)';
+    sticks[stickKey].x = 0; sticks[stickKey].y = 0;
+  }
+  zone.addEventListener('pointerdown', e => {
+    dragging = true;
+    zone.setPointerCapture(e.pointerId);
+    knob.style.transition = 'none';
+    ensureAudio();
+    update(e.clientX, e.clientY);
+  });
+  zone.addEventListener('pointermove', e => { if (dragging) update(e.clientX, e.clientY); });
+  function end(e) { if (!dragging) return; dragging = false; reset(); }
+  zone.addEventListener('pointerup', end);
+  zone.addEventListener('pointercancel', end);
+}
+setupStick('zone-left','knob-left','left');
+setupStick('zone-right','knob-right','right');
+
+/* 시동 걸기(2): 왼쪽 상단 스위치 2초 꾹 누르기 */
+function setupSwitchHold() {
+  const el = document.getElementById('switch-left');
+  if (!el) return;
+  function start(e) {
+    ensureAudio();
+    switchHoldStart = performance.now();
+    switchTriggered = false;
+    el.classList.add('holding');
+  }
+  function cancel() {
+    switchHoldStart = null;
+    switchTriggered = false;
+    el.classList.remove('holding');
+    el.style.setProperty('--hold-progress', '0%');
+  }
+  el.addEventListener('pointerdown', start);
+  el.addEventListener('pointerup', cancel);
+  el.addEventListener('pointercancel', cancel);
+  el.addEventListener('pointerleave', cancel);
+}
+setupSwitchHold();
+function updateSwitchHold() {
+  if (switchHoldStart === null || switchTriggered) return;
+  const el = document.getElementById('switch-left');
+  if (!el) return;
+  const elapsed = performance.now() - switchHoldStart;
+  const progress = Math.min(1, elapsed / SWITCH_HOLD_TIME);
+  el.style.setProperty('--hold-progress', (progress*100) + '%');
+  if (progress >= 1) {
+    setPower(!tutorial.powerOn);
+    switchTriggered = true;
+  }
+}
+
+function setPower(on) {
+  ensureAudio();
+  tutorial.powerOn = on;
+  document.getElementById('power-btn').classList.toggle('on', on);
+  beep(on ? 'stepdone' : 'poweroff');
+}
+
+/* 양쪽 스틱을 동시에 ㅅ자(아래-바깥쪽 대각선)로 밀면 시동 on/off 토글 */
+function updateArmGesture(dt) {
+  const dLeft = Math.hypot(sticks.left.x-ARM_TARGET_LEFT.x, sticks.left.y-ARM_TARGET_LEFT.y);
+  const dRight = Math.hypot(sticks.right.x-ARM_TARGET_RIGHT.x, sticks.right.y-ARM_TARGET_RIGHT.y);
+  const gestureActive = dLeft < ARM_TOLERANCE && dRight < ARM_TOLERANCE;
+  if (gestureActive) {
+    armGestureTimer += dt;
+  } else {
+    armGestureTimer = 0;
+    armGestureReady = true;
+  }
+  if (gestureActive && armGestureReady && armGestureTimer >= ARM_HOLD_TIME) {
+    setPower(!tutorial.powerOn);
+    armGestureReady = false;
+    armGestureTimer = 0;
+  }
+}
+
+/* ============================================================
+   4. 사운드 (Web Audio API)
+============================================================ */
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  } else if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+function beep(type) {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  function tone(freq, start, dur, gainVal) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, now+start);
+    gain.gain.linearRampToValueAtTime(gainVal, now+start+0.02);
+    gain.gain.linearRampToValueAtTime(0, now+start+dur);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(now+start); osc.stop(now+start+dur+0.02);
+  }
+  if (type === 'stepdone') { tone(880,0,0.12,0.2); tone(1320,0.1,0.15,0.2); }
+  else if (type === 'success') { tone(660,0,0.12,0.2); tone(880,0.12,0.12,0.2); tone(1320,0.24,0.25,0.25); }
+  else if (type === 'fail') { tone(220,0,0.1,0.25); tone(160,0.1,0.25,0.25); }
+  else if (type === 'poweroff') { tone(660,0,0.1,0.2); tone(440,0.1,0.15,0.2); }
+}
+
+/* ============================================================
+   5. 튜토리얼 로직
+============================================================ */
+function checkStepSuccess(dt) {
+  let success = false;
+  switch (currentStep) {
+    case 1: success = tutorial.powerOn; break;
+    case 2: success = tutorial.altitude >= 15; break;
+    case 3: {
+      const airborne = tutorial.altitude > 10;
+      const centered = Math.abs(sticks.left.x)<0.12 && Math.abs(sticks.left.y)<0.12 &&
+                        Math.abs(sticks.right.x)<0.12 && Math.abs(sticks.right.y)<0.12;
+      hoverTimer = (airborne && centered) ? hoverTimer + dt : 0;
+      success = hoverTimer >= 1.2;
+      break;
+    }
+    case 4:
+      if (sticks.right.y < -0.6) step4.forward = true;
+      if (sticks.right.y > 0.6) step4.backward = true;
+      success = step4.forward && step4.backward;
+      break;
+    case 5:
+      if (sticks.right.x < -0.6) step5.left = true;
+      if (sticks.right.x > 0.6) step5.right = true;
+      success = step5.left && step5.right;
+      break;
+    case 6: {
+      let a = tutorial.yaw % 360; if (a > 180) a -= 360; if (a < -180) a += 360;
+      success = Math.abs(a) >= 55;
+      break;
+    }
+    case 7:
+      success = tutorial.everAirborne && tutorial.altitude <= 2;
+      break;
+  }
+  if (success && !stepAchieved[currentStep-1]) {
+    stepAchieved[currentStep-1] = true;
+    beep('stepdone');
+  }
+  document.getElementById('step-check').style.display = stepAchieved[currentStep-1] ? 'inline-block' : 'none';
+}
+
+function updateTutorial(dt) {
+  updateArmGesture(dt);
+  updateSwitchHold();
+  if (tutorial.powerOn) {
+    tutorial.altitude = clamp(tutorial.altitude - sticks.left.y*70*dt, 0, 100);
+    if (tutorial.altitude > 10) tutorial.everAirborne = true;
+    tutorial.yaw += sticks.left.x*160*dt;
+    tutorial.posX = clamp(tutorial.posX + sticks.right.x*90*dt, -80, 80);
+    tutorial.posY = clamp(tutorial.posY + sticks.right.y*90*dt, -80, 80);
+  }
+  checkStepSuccess(dt);
+  updatePropSpin('t', tutorial.powerOn, dt);
+  renderDroneVisual('t', tutorial);
+  document.getElementById('t-wrapper').style.transform = `translate(${tutorial.posX}px, ${tutorial.posY}px)`;
+  const altPct = Math.round(tutorial.altitude);
+  document.getElementById('alt-fill-t').style.height = altPct + '%';
+  document.getElementById('alt-text-t').textContent = altPct;
+}
+
+function renderStepUI() {
+  document.getElementById('progress-badge').textContent = t('progress')(currentStep);
+  document.getElementById('step-title').textContent = t('stepTitles')[currentStep-1];
+  document.getElementById('step-desc').firstChild.textContent = t('stepDescs')[currentStep-1] + ' ';
+  document.getElementById('step-check').textContent = t('success');
+  document.getElementById('step-check').style.display = stepAchieved[currentStep-1] ? 'inline-block' : 'none';
+  document.getElementById('btn-prev').disabled = currentStep === 1;
+  document.getElementById('btn-next').textContent = t('next');
+}
+function nextStep() {
+  ensureAudio();
+  if (currentStep >= 7) { goToDiff(); return; }
+  currentStep++;
+  renderStepUI();
+}
+function prevStep() {
+  ensureAudio();
+  if (currentStep <= 1) return;
+  currentStep--;
+  renderStepUI();
+}
+
+/* ============================================================
+   6. 화면 전환
+============================================================ */
+function setScreen(name) {
+  screenName = name;
+  document.getElementById('screen-tutorial').classList.toggle('active', name==='tutorial');
+  document.getElementById('screen-diff').classList.toggle('active', name==='diff');
+  document.getElementById('screen-game').classList.toggle('active', name==='game');
+  document.getElementById('remote-panel').classList.toggle('show', name!=='diff');
+}
+function goToTutorial(reset) {
+  if (reset) {
+    currentStep = 1;
+    tutorial.powerOn=false; tutorial.altitude=0; tutorial.yaw=0; tutorial.posX=0; tutorial.posY=0; tutorial.everAirborne=false;
+    for (let i=0;i<7;i++) stepAchieved[i]=false;
+    step4.forward=false; step4.backward=false; step5.left=false; step5.right=false; hoverTimer=0;
+    armGestureTimer=0; armGestureReady=true;
+    switchHoldStart=null; switchTriggered=false;
+    document.getElementById('power-btn').classList.remove('on');
+    document.getElementById('switch-left').classList.remove('holding');
+    document.getElementById('switch-left').style.setProperty('--hold-progress', '0%');
+  }
+  setScreen('tutorial');
+  renderStepUI();
+}
+function goToDiff() {
+  setScreen('diff');
+}
+
+/* ============================================================
+   7. 게임 로직
+============================================================ */
+function buildObstacles() {
+  const area = document.getElementById('course-area');
+  area.querySelectorAll('.obstacle').forEach(el => el.remove());
+  game.obstacles.forEach(ob => {
+    const div = document.createElement('div');
+    div.className = 'obstacle ' + ob.type;
+    div.style.left = ob.x + '%';
+    div.style.top = ob.y + '%';
+    div.style.width = ob.r + 'px';
+    div.style.height = ob.r + 'px';
+    div.textContent = ob.type === 'high' ? '▲' : '▼';
+    area.appendChild(div);
+  });
+}
+function startGame(diff) {
+  ensureAudio();
+  game.difficulty = diff;
+  game.settings = DIFF_SETTINGS[diff];
+  game.obstacles = DIFF_LAYOUTS[diff];
+  resetGameState();
+  buildObstacles();
+  document.getElementById('diff-badge').textContent = t(DIFF_SETTINGS[diff].label);
+  setScreen('game');
+}
+function resetGameState() {
+  game.x = startPos.x; game.y = startPos.y; game.altitude = 0; game.yaw = 0;
+  game.started = false; game.elapsed = 0; game.status = 'playing';
+  document.getElementById('popup-overlay').classList.remove('show');
+  document.getElementById('timer-badge').textContent = '00.0s';
+}
+function retryGame() { resetGameState(); }
+
+function updateGame(dt) {
+  updatePropSpin('g', game.status === 'playing', dt);
+  if (game.status !== 'playing') return;
+  game.altitude = clamp(game.altitude - sticks.left.y*70*dt, 0, 100);
+  game.yaw += sticks.left.x*160*dt;
+  game.x = clamp(game.x + sticks.right.x*45*dt, 2, 98);
+  game.y = clamp(game.y + sticks.right.y*45*dt, 2, 98);
+
+  if (!game.started && game.altitude > 5) { game.started = true; game.startTime = performance.now(); }
+  if (game.started) {
+    game.elapsed = (performance.now() - game.startTime)/1000;
+    document.getElementById('timer-badge').textContent = game.elapsed.toFixed(1) + 's';
+  }
+
+  for (const ob of game.obstacles) {
+    const dx = game.x-ob.x, dy = game.y-ob.y;
+    const rPct = (ob.r/2) / 3.2; // px 반지름을 대략 % 단위로 환산
+    if (Math.hypot(dx,dy) < rPct + DRONE_R_PCT) {
+      const safe = ob.type==='high' ? game.altitude >= game.settings.highSafe : game.altitude <= game.settings.lowSafe;
+      if (!safe) { endGame('fail'); return; }
+    }
+  }
+  if (game.started) {
+    const dLand = Math.hypot(game.x-padPos.x, game.y-padPos.y);
+    if (dLand < 7 && game.altitude <= 8) { endGame('success'); return; }
+  }
+
+  renderDroneVisual('g', game);
+  document.getElementById('g-wrapper').style.left = game.x + '%';
+  document.getElementById('g-wrapper').style.top = game.y + '%';
+  const altPct = Math.round(game.altitude);
+  document.getElementById('alt-fill-g').style.height = altPct + '%';
+  document.getElementById('alt-text-g').textContent = altPct;
+}
+function endGame(result) {
+  game.status = result;
+  beep(result === 'success' ? 'success' : 'fail');
+  const overlay = document.getElementById('popup-overlay');
+  const title = document.getElementById('popup-title');
+  const timeP = document.getElementById('popup-time');
+  if (result === 'success') {
+    title.textContent = t('landedTitle');
+    timeP.textContent = t('timeLabel')(game.elapsed.toFixed(1));
+  } else {
+    title.textContent = t('crashTitle');
+    timeP.textContent = t('tryAgainMsg');
+  }
+  overlay.classList.add('show');
+}
+
+/* ============================================================
+   8. 언어 전환
+============================================================ */
+function setLang(l) {
+  lang = l;
+  document.getElementById('lang-ko').classList.toggle('active', l==='ko');
+  document.getElementById('lang-ru').classList.toggle('active', l==='ru');
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+  document.getElementById('marker-start').textContent = t('start');
+  document.getElementById('marker-pad').textContent = t('pad');
+  document.getElementById('diff-hint').textContent = t('diffHint');
+  document.getElementById('legend-row').textContent = t('legend');
+  document.getElementById('remote-legend').textContent = t('remoteLegend');
+  document.getElementById('diff-badge').textContent = t(DIFF_SETTINGS[game.difficulty].label);
+  renderStepUI();
+  if (game.status !== 'idle') {
+    const overlay = document.getElementById('popup-overlay');
+    if (overlay.classList.contains('show')) endGame(game.status);
+  }
+}
+
+/* ============================================================
+   9. 전체 초기화 & 메인 루프
+============================================================ */
+function fullRestart() {
+  goToTutorial(true);
+  resetGameState();
+  game.status = 'idle';
+}
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+let lastT = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - lastT)/1000);
+  lastT = now;
+  if (screenName === 'tutorial') updateTutorial(dt);
+  else if (screenName === 'game') updateGame(dt);
+  requestAnimationFrame(loop);
+}
+
+/* 초기 렌더 */
+document.getElementById('marker-start').style.left = startPos.x + '%';
+document.getElementById('marker-start').style.top = startPos.y + '%';
+document.getElementById('marker-pad').style.left = padPos.x + '%';
+document.getElementById('marker-pad').style.top = padPos.y + '%';
+document.getElementById('marker-start').textContent = t('start');
+document.getElementById('marker-pad').textContent = t('pad');
+document.getElementById('diff-hint').textContent = t('diffHint');
+document.getElementById('legend-row').textContent = t('legend');
+document.getElementById('remote-legend').textContent = t('remoteLegend');
+document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+document.getElementById('lang-ko').classList.add('active');
+const descEl = document.getElementById('step-desc');
+descEl.innerHTML = '';
+descEl.appendChild(document.createTextNode(''));
+const checkSpan = document.createElement('span');
+checkSpan.className = 'check'; checkSpan.id = 'step-check'; checkSpan.style.display='none';
+descEl.appendChild(checkSpan);
+renderStepUI();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<svg viewBox="0 0 420 260" xmlns="http://www.w3.org/2000/svg" id="remote-illustration">
+  <!-- 몸체 -->
+  <rect x="10" y="10" width="400" height="240" rx="34" fill="#1c1c1c"/>
+  <rect x="10" y="10" width="400" height="240" rx="34" fill="none" stroke="#000000" stroke-width="4"/>
+
+  <!-- 상단 안테나/손잡이 느낌 -->
+  <rect x="30" y="0" width="26" height="24" rx="6" fill="#f5c518"/>
+  <rect x="364" y="0" width="26" height="24" rx="6" fill="#f5c518"/>
+
+  <!-- 로고 영역 -->
+  <text x="210" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#f5c518">ROBOLINK</text>
+
+  <!-- 좌측 상단 스위치 -->
+  <rect x="45" y="55" width="46" height="16" rx="8" fill="#3a3a3a" stroke="#f5c518" stroke-width="2"/>
+  <!-- 우측 상단 스위치 -->
+  <rect x="329" y="55" width="46" height="16" rx="8" fill="#3a3a3a" stroke="#f5c518" stroke-width="2"/>
+
+  <!-- 왼쪽 스틱 -->
+  <g id="stick-left-base">
+    <circle cx="120" cy="160" r="62" fill="#111111"/>
+    <circle cx="120" cy="160" r="62" fill="none" stroke="#f5c518" stroke-width="4"/>
+  </g>
+  <g id="stick-left" class="stick" data-stick="left" transform="translate(120,160)">
+    <circle r="34" fill="#2b2b2b"/>
+    <circle r="34" fill="none" stroke="#f5c518" stroke-width="5"/>
+    <circle r="12" fill="#f5c518"/>
+  </g>
+
+  <!-- 오른쪽 스틱 -->
+  <g id="stick-right-base">
+    <circle cx="300" cy="160" r="62" fill="#111111"/>
+    <circle cx="300" cy="160" r="62" fill="none" stroke="#f5c518" stroke-width="4"/>
+  </g>
+  <g id="stick-right" class="stick" data-stick="right" transform="translate(300,160)">
+    <circle r="34" fill="#2b2b2b"/>
+    <circle r="34" fill="none" stroke="#f5c518" stroke-width="5"/>
+    <circle r="12" fill="#f5c518"/>
+  </g>
+
+  <!-- 하단 작은 버튼 2개 (이착륙 등) -->
+  <circle cx="210" cy="200" r="14" fill="#e2231a"/>
+  <circle cx="210" cy="160" r="10" fill="#3a3a3a" stroke="#f5c518" stroke-width="2"/>
+</svg>
